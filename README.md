@@ -32,7 +32,7 @@ Ensure the following are installed on your system:
 ## 🚀 Installation
 
 Clone the repository and install project dependencies:
-
+````
 ```bash
 # Clone this repository
 git clone https://github.com/your-username/park-ease.git
@@ -43,28 +43,31 @@ cd park-ease
 # Install all dependencies
 npm install
 ```
-
+````markdown
 ## 🛠️ Environment Setup
 
 Before running the application, configure your environment variables.
 
 1. Open the `.env` file located in the project root.
 2. Set the following variables:
-
-```
+````
+```bash
 DB_NAME=your_database_name
 DB_USER=your_mysql_username
 DB_PASSWORD=your_mysql_password
 DB_HOST=localhost
 DB_PORT=5000
 JWT_SECRET=your_jwt_secret_key
-```
+
 
 > ⚠️ Replace values accordingly with your local MySQL credentials and secret key.
+```
 
+````markdown
 ## 🗄️ Database Setup
 
 Create the database using MySQL Workbench or terminal:
+````
 
 ```sql
 CREATE DATABASE your_database_name;
