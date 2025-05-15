@@ -1,7 +1,3 @@
-Here's the improved and complete `README.md` for **ParkEase-v2**, with the `.env` setup instructions and your project details fully integrated:
-
----
-
 ````markdown
 # ParkEase-v2 🚗
 
@@ -46,7 +42,7 @@ cd park-ease
 
 # Install all dependencies
 npm install
-````
+```
 
 ## 🛠️ Environment Setup
 
