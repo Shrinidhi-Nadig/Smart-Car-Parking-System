@@ -44,57 +44,98 @@ const HomePage: React.FC = () => {
   };
 
 // Improved geolocation useEffect
+// Replace your current geolocation useEffect with this:
+
 useEffect(() => {
   if (!navigator.geolocation) {
     console.warn('Geolocation not supported');
+    setError('Geolocation is not supported by your browser');
     return;
   }
 
   const options = {
     enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: 0
+    timeout: 10000, // 10 seconds
+    maximumAge: 0 // Don't use cached position
   };
 
-  // Use getCurrentPosition first to force a high-accuracy fix
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      setUserCoords({
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      });
-      setPositionAccuracy(position.coords.accuracy);
-      setLastUpdate(Date.now());
-    },
-    (error) => {
-      console.error('Initial geolocation failed:', error);
-    },
-    options
-  );
+  // First try to get a high-accuracy position
+  const getHighAccuracyPosition = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (position.coords.accuracy <= 100) { // Good accuracy (100m or better)
+          handleNewPosition(position);
+        } else {
+          // Fallback to watchPosition if accuracy isn't good enough
+          startWatching();
+        }
+      },
+      (error) => {
+        console.warn('High accuracy position error:', error);
+        // Fallback to lower accuracy if high accuracy fails
+        options.enableHighAccuracy = false;
+        navigator.geolocation.getCurrentPosition(
+          handleNewPosition,
+          handlePositionError,
+          options
+        );
+      },
+      options
+    );
+  };
 
-  // Then start watching position
-  const id = navigator.geolocation.watchPosition(
-    (position) => {
-      if (
-        Date.now() - lastUpdate > 5000 ||
-        position.coords.accuracy < (positionAccuracy ?? Infinity)
-      ) {
-        setUserCoords({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-        setPositionAccuracy(position.coords.accuracy);
-        setLastUpdate(Date.now());
-      }
-    },
-    (error) => console.error('Watch error:', error),
-    options
-  );
+  const startWatching = () => {
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        // Only update if we get better accuracy
+        if (!positionAccuracy || position.coords.accuracy < positionAccuracy) {
+          handleNewPosition(position);
+        }
+      },
+      handlePositionError,
+      options
+    );
+    setWatchId(id);
+  };
 
-  setWatchId(id);
+  const handleNewPosition = (position: GeolocationPosition) => {
+    setUserCoords({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude
+    });
+    setPositionAccuracy(position.coords.accuracy);
+    setLastUpdate(Date.now());
+    
+    // If we have good accuracy now, stop watching to save battery
+    if (position.coords.accuracy <= 50 && watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+  };
+
+  const handlePositionError = (error: GeolocationPositionError) => {
+    console.error('Geolocation error:', error);
+    switch(error.code) {
+      case error.PERMISSION_DENIED:
+        setError('Location access was denied. Please enable location services.');
+        break;
+      case error.POSITION_UNAVAILABLE:
+        setError('Location information is unavailable.');
+        break;
+      case error.TIMEOUT:
+        setError('The request to get location timed out.');
+        break;
+      default:
+        setError('An unknown error occurred while getting location.');
+    }
+  };
+
+  getHighAccuracyPosition();
 
   return () => {
-    if (id) navigator.geolocation.clearWatch(id);
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+    }
   };
 }, []);
   

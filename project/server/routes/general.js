@@ -126,7 +126,7 @@ router.get('/locations/bookings', verifyToken(['user', 'admin', 'employee']), as
        FROM bookings b
        JOIN parking_locations p ON b.parking_location_id = p.id
        WHERE b.user_id = ?
-       ORDER BY b.start_time DESC`,
+       ORDER BY b.start_time ASC`,
       [req.user.id]
     );
 
